@@ -43,5 +43,5 @@ Temporary Items
 .apdisk
 
 # Sublime Text files
-.sublime-project
-.sublime-workspace
+*.sublime-project
+*.sublime-workspace
