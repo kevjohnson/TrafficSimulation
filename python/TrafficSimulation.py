@@ -1,4 +1,7 @@
 import Queue
+import Lane
+import Light
+import Car
 
 
 class TrafficSimulation(object):
