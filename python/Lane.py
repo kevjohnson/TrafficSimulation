@@ -5,8 +5,7 @@ class Lane(object):
 
     """This class stores all the information we need for each lane"""
 
-    def __init__(self, id, capacity, light, nextLanes):
-        self.id = id
+    def __init__(self, capacity, light, nextLanes):
         self.capacity = capacity
         self.light = light
         self.nextLanes = nextLanes
@@ -17,12 +16,6 @@ class Lane(object):
 
     def setCapacity(self, capacity):
         self.capacity = capacity
-
-    def getId(self):
-        return self.id
-
-    def setId(self, id):
-        self.id = id
 
     def getLight(self):
         return self.light
