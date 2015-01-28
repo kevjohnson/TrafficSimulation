@@ -2,7 +2,7 @@ class Car(object):
 
     """This class represents a car"""
 
-    def __init__(self, origin, entryTime, redLight):
+    def __init__(self, origin, entryTime, redLight=0):
         self.origin = origin
         self.entryTime = entryTime
         self.redLight = redLight

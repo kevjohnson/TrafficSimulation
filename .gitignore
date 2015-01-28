@@ -45,3 +45,7 @@ Temporary Items
 # Sublime Text files
 *.sublime-project
 *.sublime-workspace
+
+# Python
+*.pyc
+__pycache__

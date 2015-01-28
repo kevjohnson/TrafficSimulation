@@ -1,15 +1,14 @@
-import Queue
+import queue
 
 
 class Lane(object):
 
     """This class stores all the information we need for each lane"""
 
-    def __init__(self, capacity, light, nextLanes):
+    def __init__(self, capacity, light):
         self.capacity = capacity
         self.light = light
-        self.nextLanes = nextLanes
-        self.cars = Queue.Queue(maxsize=capacity)
+        self.cars = queue.Queue(maxsize=capacity)
 
     def getCapacity(self):
         return self.capacity
@@ -28,3 +27,6 @@ class Lane(object):
 
     def getNextCar(self):
         return self.cars.get()
+
+    def getCars(self):
+        return self.cars

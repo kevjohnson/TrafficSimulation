@@ -10,3 +10,9 @@ class Light(object):
 
     def setState(self, state):
         self.state = state
+
+    def changeState(self):
+        if self.state == 0:
+            self.state == 1
+        else:
+            self.state == 0
