@@ -29,7 +29,7 @@ class TrafficSimulation(object):
             self.eventList.put(
                 (round(-math.log(random.random()) / self.rate[i - 1]),
                     i, "arrival"))
-        for i in range(0, 30000, 15):
+        for i in range(15, 30000, 15):
             for j in range(19):
                 self.eventList.put((i, j, "light change"))
         self.nextLanes = {
@@ -60,10 +60,10 @@ class TrafficSimulation(object):
         self.time += event[0]
         if event[2] == "arrival":
             car = Car.Car(origin=event[1], entryTime=self.time)
-            self.lanes[event[1]].addCar(car)
+            self.lanes[event[1]-1].addCar(car)
             self.eventList.put(
                 (self.time + round(-math.log(random.random()) /
-                                   self.rate[event[1]]),
+                                   self.rate[event[1]-1]),
                  event[1], "arrival"))
         else:
             for i in range(19):

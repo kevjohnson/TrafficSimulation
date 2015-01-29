@@ -14,6 +14,7 @@ def main():
     end = 60 * 1
     time = 0
     while time < end:
+        print(time)
         time = simulation.nextEvent()
     outFile.close()
 
