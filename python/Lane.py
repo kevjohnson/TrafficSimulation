@@ -26,7 +26,7 @@ class Lane(object):
         self.cars.put(car)
 
     def getNextCar(self):
-        return self.cars.get()
+        return self.cars.get(block=False)
 
     def getCars(self):
         return self.cars

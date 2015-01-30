@@ -20,81 +20,79 @@ class TrafficSimulation(object):
         self.eventList = queue.PriorityQueue()
         self.turnProbs = turnProbs
         self.lights = [Light.Light() for i in range(19)]
-        for i in [1, 4, 5, 8, 9, 12, 13, 15, 19]:
+        for i in [0, 3, 4, 7, 8, 11, 12, 14, 18]:
             self.lights[i - 1].setState(1)
         self.lanes = [Lane.Lane(self.capacity[i], self.lights[i])
                       for i in range(19)]
-        self.arrivalLanes = [1, 2, 3, 6, 7, 10, 11, 14, 17, 18, 19]
+        self.arrivalLanes = [0, 1, 2, 5, 6, 9, 10, 13, 16, 17, 18]
         for i in self.arrivalLanes:
             self.eventList.put(
-                (round(-math.log(random.random()) / self.rate[i - 1]),
+                (-math.log(random.random()) / self.rate[i],
                     i, "arrival"))
         for i in range(15, 30000, 15):
             for j in range(19):
                 self.eventList.put((i, j, "light change"))
         self.nextLanes = {
-            1: (5, 99, 99),
-            2: (99, 5, 99),
-            3: (99, 99, 5),
-            4: (99, 99, 99),
-            5: (9, 99, 99),
-            6: (99, 9, 4),
-            7: (99, 4, 9),
-            8: (4, 99, 99),
-            9: (13, 99, 99),
-            10: (99, 13, 8),
-            11: (99, 8, 13),
-            12: (8, 99, 99),
-            13: (16, 99, 99),
-            14: (99, 12, 16),
-            15: (12, 99, 99),
-            16: (99, 99, 99),
-            17: (99, 99, 15),
-            18: (99, 15, 99),
-            19: (15, 99, 99)
+            0: (4, 99, 99),
+            1: (99, 4, 99),
+            2: (99, 99, 4),
+            3: (99, 99, 99),
+            4: (8, 99, 99),
+            5: (99, 8, 3),
+            6: (99, 3, 8),
+            7: (3, 99, 99),
+            8: (12, 99, 99),
+            9: (99, 12, 7),
+            10: (99, 7, 12),
+            11: (7, 99, 99),
+            12: (15, 99, 99),
+            13: (99, 11, 16),
+            14: (11, 99, 99),
+            15: (99, 99, 99),
+            16: (99, 99, 14),
+            17: (99, 14, 99),
+            18: (14, 99, 99)
         }
 
     def nextEvent(self):
         event = self.eventList.get()
-        print(event)
-        self.time += event[0]
+        self.time = event[0]
+        l = event[1]
         if event[2] == "arrival":
-            car = Car.Car(origin=event[1], entryTime=self.time)
-            self.lanes[event[1]-1].addCar(car)
+            car = Car.Car(origin=l, entryTime=self.time)
+            if (self.lanes[l].getCars().empty() == True and
+                    self.lights[l].getState() == 1):
+                self.eventList.put(
+                    (self.time + self.flow, l, "move car"))
+            self.lanes[l].addCar(car)
             self.eventList.put(
-                (self.time + round(-math.log(random.random()) /
-                                   self.rate[event[1]-1]),
-                 event[1], "arrival"))
-        else:
-            for i in range(19):
-                self.lights[i].changeState()
-        self.updateSimulation()
-        return self.time
-
-    def updateSimulation(self):
-        nextEvent = self.eventList.get()
-        timeUntilNextEvent = nextEvent[1] - self.time
-        self.eventList.put(nextEvent)
-        numCars = math.floor(self.flow * (timeUntilNextEvent - self.time))
-        updateOrder = [16, 13, 9, 5, 1, 4, 8, 12, 15, 19, 2, 3, 6, 7,
-                       10, 11, 14, 17, 18]
-        for i in updateOrder:
-            for j in range(max(numCars, self.lanes[i-1].getCars().qsize())):
-                car = self.lanes[i].getNextCar()
+                (self.time + (-math.log(random.random()) /
+                              self.rate[l]),
+                 l, "arrival"))
+        elif event[2] == "move car":
+            if (self.lights[l].getState() == 1 and
+                    self.lanes[l].getCars().empty() is not True):
                 r = random.random()
                 if r < self.turnProbs[0]:
-                    self.moveCar(car, self.nextLanes[i][0],
-                                 i, self.time + j / self.flow)
-                elif r < self.turnProbs[1]:
-                    self.moveCar(car, self.nextLanes[i][1],
-                                 i, self.time + j / self.flow)
+                    nextLane = self.nextLanes[l][0]
+                elif r < (self.turnProbs[0] + self.turnProbs[1]):
+                    nextLane = self.nextLanes[l][1]
                 else:
-                    self.moveCar(car, self.nextLanes[i][2],
-                                 i, self.time + j / self.flow)
-
-    def moveCar(self, car, nextLane, currentLane, time):
-        if nextLane == 99:
-            self.writer.writerow(
-                [car.getOrigin(), currentLane, time - car.getEntryTime()])
+                    nextLane = self.nextLanes[l][2]
+                if nextLane == 99:
+                    car = self.lanes[l].getNextCar()
+                    self.writer.writerow([car.getOrigin(), l,
+                                          self.time - car.getEntryTime()])
+                elif self.lanes[nextLane].getCars().full() is not True:
+                    car = self.lanes[l].getNextCar()
+                    self.lanes[nextLane].addCar(car)
+                if self.lanes[l].getCars().empty() is not True:
+                    self.eventList.put(
+                        (self.time + self.flow, l, "move car"))
         else:
-            self.lanes[nextLane].addCar()
+            self.lights[l].changeState()
+            if (self.lights[l].getState() == 1 and
+                    self.lanes[l].getCars().empty() is not True):
+                self.eventList.put(
+                    (self.time + self.flow, l, "move car"))
+        return self.time
