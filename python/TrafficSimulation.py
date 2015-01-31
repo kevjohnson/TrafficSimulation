@@ -21,7 +21,7 @@ class TrafficSimulation(object):
         self.turnProbs = turnProbs
         self.lights = [Light.Light() for i in range(19)]
         for i in [0, 3, 4, 7, 8, 11, 12, 14, 18]:
-            self.lights[i - 1].setState(1)
+            self.lights[i].setState(1)
         self.lanes = [Lane.Lane(self.capacity[i], self.lights[i])
                       for i in range(19)]
         self.arrivalLanes = [0, 1, 2, 5, 6, 9, 10, 13, 16, 17, 18]
