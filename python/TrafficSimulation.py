@@ -10,29 +10,34 @@ class TrafficSimulation(object):
 
     """This class governs the entire simulation"""
 
-    def __init__(self, arrivalRates, travelMatrix, capacity, flow, period,
-                 timeLimit):
+    def __init__(self, arrivalRates, travelMatrix, capacity, flow,
+                 signalTimings, timeLimit, synchronous):
         self.output = []
+        self.carsInSystem = 0
         self.id = 0
         self.finished = False
         self.timeLimit = timeLimit
-        self.period = period
         self.arrivalRates = arrivalRates
+        self.signalTimings = signalTimings
         self.flow = flow
         self.capacity = capacity
         self.time = 0
         self.eventList = queue.PriorityQueue()
         self.travelMatrix = travelMatrix
-        self.lights = [Light.Light() for i in range(19)]
-        for i in [0, 3, 4, 7, 8, 11, 12, 14, 18]:
-            self.lights[i].setState(1)
+        self.lights = [Light.Light(self.signalTimings[i]) for i in range(19)]
+        if synchronous:
+            for i in [0, 3, 4, 7, 8, 11, 12, 13, 14, 18]:
+                self.lights[i].setState(1)
+        else:
+            for i in [1, 2, 4, 7, 9, 10, 12, 13, 14, 18]:
+                self.lights[i].setState(1)
         self.lanes = [Lane.Lane(self.capacity[i], self.lights[i])
                       for i in range(19)]
         for lane in self.arrivalRates:
             self.scheduler(-math.log(random.random()) /
                            self.arrivalRates[lane], "System Arrival", lane)
         for i in range(19):
-            self.scheduler(self.period, "Light Change", i)
+            self.scheduler(self.lights[i].getNextChange(), "Light Change", i)
         self.intersections = {0: (0, 1, 2, 3),
                               1: (4, 5, 6, 7),
                               2: (8, 9, 10, 11),
@@ -44,6 +49,7 @@ class TrafficSimulation(object):
             event = self.eventList.get()
             self.time = event[0]
             self.eventHandler(event)
+            # print("{:.2%}".format(self.time / self.timeLimit), end="\r")
             if self.time > self.timeLimit:
                 self.finished = True
 
@@ -122,7 +128,8 @@ class TrafficSimulation(object):
         if (self.lights[light].getState() == 1 and
                 self.lanes[light].getCars().empty() is not True):
             self.scheduler(self.time + self.flow, "Lane Departure", light)
-        self.scheduler(self.time + self.period, "Signal Change", light)
+        self.scheduler(self.time + self.lights[light].getNextChange(),
+                       "Signal Change", light)
 
     def getDestination(self, origin):
         r = random.random()
