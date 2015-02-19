@@ -54,39 +54,60 @@ class TrafficSimulation(object):
             18: (14, 99, 99)
         }
 
+    def run(self):
+        while self.finished is False:
+            event = self.eventList.get()
+            self.time = event[0]
+            self.eventHandler(event)
+
+    def eventHandler(self, event):
+        if event[1] == "System Arrival":
+            self.systemArrival(event[2])
+        elif event[1] == "Lane Departure":
+            self.laneDeparture(event[2])
+        elif event[1] == "Lane Arrival":
+            self.laneArrival(event[2], event[3])
+        else:
+            self.signalChange(event[2])
+
+    def scheduler(self, timestamp, eventType, eventData):
+        self.eventList.put((timestamp, eventType, eventData))
+
     def systemArrival(self, lane):
-        self.eventList.put(
-            (self.time - math.log(random.random()) / self.rate[lane],
-                lane, "System Arrival"))
+        self.scheduler(self.time - math.log(random.random()) /
+                       self.rate[lane], "System Arrival", lane)
         car = Car.Car(origin=lane, entryTime=self.time)
         if (self.lights[lane].getState() == 0 or
                 self.lanes[lane].getCars().empty() is not True):
             self.lanes[lane].addCar(car)
         else:
-            self.eventList.put((self.time + self.flow, self.getNextLane(lane),
-                                car, "Lane Arrival"))
+            self.scheduler(self.time + self.flow, "Lane Arrival",
+                           (self.getNextLane(lane), car))
 
     def laneDeparture(self, lane):
         if (self.lights[lane].getState() == 0 and
                 self.lanes[lane].getCars().empty() is not True):
             car = self.lanes.getNextCar()
-            self.eventList.put(
-                (self.time + self.flow, lane, car, "Lane Arrival"))
+            self.scheduler(self.time + self.flow, "Lane Arrival",
+                           (lane, car))
+            self.scheduler(self.time + self.flow, "Lane Departure", lane)
 
     def laneArrival(self, lane, car):
         if (self.lights[lane].getState() == 0 or
                 self.lanes[lane].getCars().empty() is not True):
             self.lanes[lane].addCar(car)
         else:
-            self.eventList.put((self.time + self.flow, self.getNextLane(lane),
-                                car, "Lane Arrival"))
+            self.scheduler(self.time + self.flow, "Lane Arrival",
+                           (self.getNextLane(lane), car))
 
     def signalChange(self, light):
         self.lights[light].changeState()
         if (self.lights[light].getState() == 1 and
                 self.lanes[light].getCars().empty is not True):
-            self.eventList.put((self.time + self.flow, self.getNextLane(light),
-                                car, "Lane Arrival"))
+            car = self.lanes[light].getNextCar()
+            self.scheduler(self.time + self.flow, "Lane Arrival",
+                           (self.getNextLane(light), car))
+        self.scheduler(self.time + self.period, "Signal Change", light)
 
     def getNextLane(self, origin):
         r = random.random()
