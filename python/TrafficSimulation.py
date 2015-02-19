@@ -54,6 +54,49 @@ class TrafficSimulation(object):
             18: (14, 99, 99)
         }
 
+    def systemArrival(self, lane):
+        self.eventList.put(
+            (self.time - math.log(random.random()) / self.rate[lane],
+                lane, "System Arrival"))
+        car = Car.Car(origin=lane, entryTime=self.time)
+        if (self.lights[lane].getState() == 0 or
+                self.lanes[lane].getCars().empty() is not True):
+            self.lanes[lane].addCar(car)
+        else:
+            self.eventList.put((self.time + self.flow, self.getNextLane(lane),
+                                car, "Lane Arrival"))
+
+    def laneDeparture(self, lane):
+        if (self.lights[lane].getState() == 0 and
+                self.lanes[lane].getCars().empty() is not True):
+            car = self.lanes.getNextCar()
+            self.eventList.put(
+                (self.time + self.flow, lane, car, "Lane Arrival"))
+
+    def laneArrival(self, lane, car):
+        if (self.lights[lane].getState() == 0 or
+                self.lanes[lane].getCars().empty() is not True):
+            self.lanes[lane].addCar(car)
+        else:
+            self.eventList.put((self.time + self.flow, self.getNextLane(lane),
+                                car, "Lane Arrival"))
+
+    def signalChange(self, light):
+        self.lights[light].changeState()
+        if (self.lights[light].getState() == 1 and
+                self.lanes[light].getCars().empty is not True):
+            self.eventList.put((self.time + self.flow, self.getNextLane(light),
+                                car, "Lane Arrival"))
+
+    def getNextLane(self, origin):
+        r = random.random()
+        if r < self.turnProbs[origin][0]:
+            return self.nextLanes[0]
+        elif r < self.turnProbs[origin][1]:
+            return self.nextLanes[1]
+        else:
+            return self.nextLanes[2]
+
     def nextEvent(self):
         event = self.eventList.get()
         self.time = event[0]
