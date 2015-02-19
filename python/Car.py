@@ -2,10 +2,11 @@ class Car(object):
 
     """This class represents a car"""
 
-    def __init__(self, origin, entryTime, redLight=0):
+    def __init__(self, origin, destination, route, entryTime):
         self.origin = origin
+        self.destination = destination
+        self.route = route
         self.entryTime = entryTime
-        self.redLight = redLight
 
     def getOrigin(self):
         return self.origin
@@ -13,11 +14,23 @@ class Car(object):
     def setOrigin(self, origin):
         self.origin = origin
 
+    def getDestination(self):
+        return self.destination
+
+    def setDestination(self, destination):
+        self.destination = destination
+
     def getEntryTime(self):
         return self.entryTime
 
     def setEntryTime(self, entryTime):
         self.entryTime = entryTime
 
-    def addRedLight(self, time):
-        self.redLight += time
+    def getNextLane(self):
+        return self.route.pop(0)
+
+    def getNextLaneNoRemove(self):
+        return self.route[0]
+
+    def getRoute(self):
+        return self.route
