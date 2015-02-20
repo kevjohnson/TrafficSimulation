@@ -12,6 +12,7 @@ class TrafficSimulation(object):
 
     def __init__(self, arrivalRates, travelMatrix, capacity, flow,
                  signalTimings, timeLimit, synchronous):
+        # random.seed(123)
         self.output = []
         self.carsInSystem = 0
         self.id = 0
@@ -88,7 +89,7 @@ class TrafficSimulation(object):
             car = self.lanes[lane].getNextCar()
             nextLane = car.getNextLane()
             if nextLane not in (3, 4, 7, 8, 11, 12, 14, 15):
-                self.output.append(self.time - car.getEntryTime())
+                self.output.append((self.time, self.time - car.getEntryTime()))
                 self.scheduler(self.time + self.flow, "Lane Departure", lane)
             elif self.lanes[nextLane].getCars().full() is True:
                 self.scheduler(self.time + self.flow, "Lane Full",
