@@ -4,7 +4,7 @@ import csv
 
 def main():
     flow = 1.5
-    synchronous = False
+    synchronous = True
     with open("data/Arrival Rates.csv") as inFile:
         reader = csv.reader(inFile)
         arrivalRates = {int(rows[0]): float(rows[1]) for rows in reader}
@@ -23,12 +23,12 @@ def main():
     for key in signalTimings:
         for index, item in enumerate(signalTimings[key]):
             signalTimings[key][index] = int(signalTimings[key][index])
-    timeLimit = 60 * 150
-    for i in range(50):
+    timeLimit = 60 * 500
+    for i in range(10):
         print(i)
         simulation = TrafficSimulation.TrafficSimulation(
             arrivalRates, travelMatrix, capacity, flow, signalTimings,
-            timeLimit, synchronous)
+            timeLimit, synchronous, i)
         simulation.run()
         with open("output/output" + str(i) + ".txt", 'w') as outFile:
             output = simulation.getOutput()

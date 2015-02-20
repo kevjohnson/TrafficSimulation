@@ -11,8 +11,8 @@ class TrafficSimulation(object):
     """This class governs the entire simulation"""
 
     def __init__(self, arrivalRates, travelMatrix, capacity, flow,
-                 signalTimings, timeLimit, synchronous):
-        # random.seed(123)
+                 signalTimings, timeLimit, synchronous, seed):
+        random.seed(seed)
         self.output = []
         self.carsInSystem = 0
         self.id = 0
@@ -50,7 +50,7 @@ class TrafficSimulation(object):
             event = self.eventList.get()
             self.time = event[0]
             self.eventHandler(event)
-            # print("{:.2%}".format(self.time / self.timeLimit), end="\r")
+            print("{:.2%}".format(self.time / self.timeLimit), end="\r")
             if self.time > self.timeLimit:
                 self.finished = True
 
@@ -89,7 +89,9 @@ class TrafficSimulation(object):
             car = self.lanes[lane].getNextCar()
             nextLane = car.getNextLane()
             if nextLane not in (3, 4, 7, 8, 11, 12, 14, 15):
-                self.output.append((self.time, self.time - car.getEntryTime()))
+                self.output.append((self.time, car.getOrigin(),
+                                    car.getDestination(),
+                                    self.time - car.getEntryTime()))
                 self.scheduler(self.time + self.flow, "Lane Departure", lane)
             elif self.lanes[nextLane].getCars().full() is True:
                 self.scheduler(self.time + self.flow, "Lane Full",
