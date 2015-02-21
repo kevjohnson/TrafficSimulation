@@ -2,6 +2,8 @@ import queue
 import Lane
 import Light
 import Car
+import PQ
+import RandomNumberGenerator
 import random
 import math
 
@@ -13,6 +15,7 @@ class TrafficSimulation(object):
     def __init__(self, arrivalRates, travelMatrix, capacity, flow,
                  signalTimings, timeLimit, synchronous, seed):
         random.seed(seed)
+        rng = RandomNumberGenerator.RandomNumberGenerator(seed)
         self.output = []
         self.carsInSystem = 0
         self.id = 0
@@ -23,9 +26,15 @@ class TrafficSimulation(object):
         self.flow = flow
         self.capacity = capacity
         self.time = 0
-        self.eventList = queue.PriorityQueue()
+        self.eventList = PQ.PriorQ()
         self.travelMatrix = travelMatrix
         self.lights = [Light.Light(self.signalTimings[i]) for i in range(19)]
+        self.randomNumbers = []
+        self.arrivalIndex = {0: 0, 1: 1, 2: 2, 5: 3, 6: 4, 9: 5, 10: 6, 13: 7,
+                             16: 8, 17: 9, 18: 10}
+        self.rngCounter = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        for i in range(20000):
+            self.randomNumbers.append(rng.GetRandList())
         if synchronous:
             for i in [0, 3, 4, 7, 8, 11, 12, 13, 14, 18]:
                 self.lights[i].setState(1)
@@ -35,8 +44,11 @@ class TrafficSimulation(object):
         self.lanes = [Lane.Lane(self.capacity[i], self.lights[i])
                       for i in range(19)]
         for lane in self.arrivalRates:
-            self.scheduler(-math.log(random.random()) /
-                           self.arrivalRates[lane], "System Arrival", lane)
+            self.scheduler(self.time - math.log(
+                self.randomNumbers[self.rngCounter[self.arrivalIndex[lane]]]
+                [self.arrivalIndex[lane]]) /
+                self.arrivalRates[lane], "System Arrival", lane)
+        self.rngCounter[self.arrivalIndex[lane]] += 1
         for i in range(19):
             self.scheduler(self.lights[i].getNextChange(), "Light Change", i)
         self.intersections = {0: (0, 1, 2, 3),
@@ -47,7 +59,7 @@ class TrafficSimulation(object):
 
     def run(self):
         while self.finished is False:
-            event = self.eventList.get()
+            event = self.eventList.remove()
             self.time = event[0]
             self.eventHandler(event)
             print("{:.2%}".format(self.time / self.timeLimit), end="\r")
@@ -67,13 +79,16 @@ class TrafficSimulation(object):
             self.signalChange(event[3])
 
     def scheduler(self, timestamp, eventType, eventData):
-        self.eventList.put((timestamp, self.id, eventType, eventData))
+        self.eventList.insert((timestamp, self.id, eventType, eventData))
         self.id += 1
 
     def systemArrival(self, eventData):
         lane = eventData
-        self.scheduler(self.time - math.log(random.random()) /
-                       self.arrivalRates[lane], "System Arrival", lane)
+        self.scheduler(self.time - math.log(
+            self.randomNumbers[self.rngCounter[self.arrivalIndex[lane]]]
+            [self.arrivalIndex[lane]]) /
+            self.arrivalRates[lane], "System Arrival", lane)
+        self.rngCounter[self.arrivalIndex[lane]] += 1
         destination = self.getDestination(lane)
         route = self.getRoute(lane, destination)
         car = Car.Car(origin=lane, destination=destination,

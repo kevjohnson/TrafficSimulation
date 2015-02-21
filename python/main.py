@@ -23,18 +23,17 @@ def main():
     for key in signalTimings:
         for index, item in enumerate(signalTimings[key]):
             signalTimings[key][index] = int(signalTimings[key][index])
-    timeLimit = 60 * 500
-    for i in range(10):
-        print(i)
-        simulation = TrafficSimulation.TrafficSimulation(
-            arrivalRates, travelMatrix, capacity, flow, signalTimings,
-            timeLimit, synchronous, i)
-        simulation.run()
-        with open("output/output" + str(i) + ".txt", 'w') as outFile:
-            output = simulation.getOutput()
-            writer = csv.writer(outFile)
-            for elem in output:
-                writer.writerow(elem)
+    timeLimit = 60 * 150
+    seed = 123
+    simulation = TrafficSimulation.TrafficSimulation(
+        arrivalRates, travelMatrix, capacity, flow, signalTimings,
+        timeLimit, synchronous, seed)
+    simulation.run()
+    with open("output.txt", 'w') as outFile:
+        output = simulation.getOutput()
+        writer = csv.writer(outFile)
+        for elem in output:
+            writer.writerow(elem)
 
 if __name__ == "__main__":
     main()

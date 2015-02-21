@@ -10,12 +10,6 @@ class Lane(object):
         self.light = light
         self.cars = queue.Queue(maxsize=capacity)
 
-    def getCapacity(self):
-        return self.capacity
-
-    def setCapacity(self, capacity):
-        self.capacity = capacity
-
     def getLight(self):
         return self.light
 
